@@ -13,6 +13,13 @@
 #define Mesg_Head 0xAA
 #define Mesg_Tail 0x55
 
+#define ANTI_SHAKE_CODE 0x21
+#define ANTI_SHAKE_TRIGGER 0x00
+#define ANTI_SHAKE_RELEASE 0x01
+#define ANTI_SHAKE_SCAN_PERIOD 10U
+#define ANTI_SHAKE_DEBOUNCE_COUNT 3U
+#define ANTI_SHAKE_RELEASE_TIME 5000U
+
 static uint8_t rx1_buffer[512];
 static uint8_t rx3_buffer[512];
 
@@ -41,6 +48,80 @@ extern uint8_t ButtonLight_Position;
 extern Light_t Light;
 extern BreathLight_t J20, J21, J22, J23, J24, J26;
 extern BreathLight_t *BreathList[];
+
+static bool AntiShake_AlarmActive = false;
+static bool AntiShake_InputLow = false;
+static uint8_t AntiShake_LowCount = 0;
+static uint8_t AntiShake_HighCount = 0;
+static uint32_t AntiShake_LastScanTick = 0;
+static uint32_t AntiShake_LastTriggerTick = 0;
+
+static void AntiShake_Init(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin = GPIO_PIN_6;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+}
+
+/* 使用现有7字节协议发送防摇消息，状态放在低位数据Data2 */
+static void AntiShake_Transmit(uint8_t state)
+{
+    CommTransmitFillData(&Tx1, ANTI_SHAKE_CODE, 0x00, state);
+}
+
+static void AntiShake_Task(void)
+{
+    uint32_t now = HAL_GetTick();
+
+    if ((uint32_t)(now - AntiShake_LastScanTick) < ANTI_SHAKE_SCAN_PERIOD)
+        return;
+
+    AntiShake_LastScanTick = now;
+
+    if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_6) == GPIO_PIN_RESET)
+    {
+        AntiShake_HighCount = 0;
+
+        if (AntiShake_LowCount < ANTI_SHAKE_DEBOUNCE_COUNT)
+            AntiShake_LowCount++;
+
+        if (AntiShake_LowCount >= ANTI_SHAKE_DEBOUNCE_COUNT &&
+            AntiShake_InputLow == false)
+        {
+            AntiShake_InputLow = true;
+            AntiShake_LastTriggerTick = now;
+
+            if (AntiShake_AlarmActive == false)
+            {
+                AntiShake_Transmit(ANTI_SHAKE_TRIGGER);
+                AntiShake_AlarmActive = true;
+            }
+        }
+    }
+    else
+    {
+        AntiShake_LowCount = 0;
+
+        if (AntiShake_HighCount < ANTI_SHAKE_DEBOUNCE_COUNT)
+            AntiShake_HighCount++;
+
+        if (AntiShake_HighCount >= ANTI_SHAKE_DEBOUNCE_COUNT)
+            AntiShake_InputLow = false;
+    }
+
+    if (AntiShake_AlarmActive == true &&
+        AntiShake_InputLow == false &&
+        (uint32_t)(now - AntiShake_LastTriggerTick) >= ANTI_SHAKE_RELEASE_TIME)
+    {
+        AntiShake_Transmit(ANTI_SHAKE_RELEASE);
+        AntiShake_AlarmActive = false;
+    }
+}
 
 /* 串口1解包与处理*/
 static bool USART1_ReceiveMesg_Verify(void *self, void *mesg)
@@ -209,12 +290,15 @@ void CommInit(void)
 
     Txinit.huart = &huart3;
     Communicate_Tx_Init(&Tx3, Txinit);
+
+    AntiShake_Init();
 }
 
 void CommTask(void)
 {
     Rx1.Receive(&Rx1, &USART1_Mesg, 7);
     Rx3.Receive(&Rx3, &USART3_Mesg, 11);
+    AntiShake_Task();
 }
 
 void CommTransmitFillData(Tx_HandleTypeDef *Tx, uint8_t code, uint8_t data1, uint8_t data2)
