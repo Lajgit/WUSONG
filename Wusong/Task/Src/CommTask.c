@@ -13,7 +13,7 @@
 #define Mesg_Head 0xAA
 #define Mesg_Tail 0x55
 
-#define ANTI_SHAKE_CODE 0x21
+#define ANTI_SHAKE_CODE 0x20
 #define ANTI_SHAKE_TRIGGER 0x00
 #define ANTI_SHAKE_RELEASE 0x01
 #define ANTI_SHAKE_SCAN_PERIOD 10U
