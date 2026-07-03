@@ -5,6 +5,28 @@
 #include "port_communicate.h"
 #include "app_list.h"
 
+/*
+ * APP版本号编码：0xMMNNPPBB
+ * MM=主版本，NN=次版本，PP=修订版本，BB=构建版本。
+ * 当前版本：V1.0.0。
+ */
+#define WUSONG_APP_VERSION 0x01000000U
+
+/*
+ * 武松原安卓通信为固定7字节：
+ * AA Code Data1 Data2 CRC16_H CRC16_L 55
+ *
+ * 新增系统命令0xF0：
+ *   F0 00 00：查询APP版本，APP依次返回F1和F2两帧；
+ *   F0 42 4F：写入RTC升级请求并复位进入Bootloader。
+ */
+#define WUSONG_SYSTEM_COMMAND 0xF0U
+#define WUSONG_VERSION_HIGH_RESPONSE 0xF1U
+#define WUSONG_VERSION_LOW_RESPONSE 0xF2U
+#define WUSONG_OTA_KEY_HIGH 0x42U
+#define WUSONG_OTA_KEY_LOW 0x4FU
+#define OTA_REQUEST_MAGIC 0x424F5441U /* ASCII "BOTA" */
+
 // 串口1 消息帧结构体
 typedef struct
 {
