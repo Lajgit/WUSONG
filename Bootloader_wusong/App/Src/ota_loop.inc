@@ -1,4 +1,4 @@
-static void OTA_Run(void)
+void OTA_Run(void)
 {
     while (1)
     {
