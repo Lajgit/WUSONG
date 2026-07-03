@@ -6,5 +6,3 @@ static void OTA_Run(void)
             OTA_Dispatch(&Packet);
     }
 }
-
-#include "ota_wait.inc"
