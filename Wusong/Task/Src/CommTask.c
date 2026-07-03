@@ -56,6 +56,79 @@ static uint8_t AntiShake_HighCount = 0;
 static uint32_t AntiShake_LastScanTick = 0;
 static uint32_t AntiShake_LastTriggerTick = 0;
 
+/* 将串口升级请求写入RTC备份寄存器，系统复位后由Bootloader读取。 */
+static bool Board_WriteBootRequest(uint32_t request_magic)
+{
+    uint32_t timeout;
+    uint32_t retry;
+
+    __HAL_RCC_PWR_CLK_ENABLE();
+    __DSB();
+    (void)RCC->APB1ENR;
+
+    HAL_PWR_EnableBkUpAccess();
+
+    timeout = 100000U;
+    while (((PWR->CR & PWR_CR_DBP) == 0U) && (timeout > 0U))
+        timeout--;
+
+    if (timeout == 0U)
+        return false;
+
+    __HAL_RCC_RTC_ENABLE();
+    __DSB();
+    (void)RCC->BDCR;
+
+    for (retry = 0U; retry < 3U; retry++)
+    {
+        RTC->BKP0R = request_magic;
+        __DSB();
+        __ISB();
+
+        if (RTC->BKP0R == request_magic)
+        {
+            HAL_PWR_DisableBkUpAccess();
+            return true;
+        }
+    }
+
+    HAL_PWR_DisableBkUpAccess();
+    return false;
+}
+
+/* 使用两帧7字节消息返回完整32位APP版本号。 */
+static void Board_SendVersion(void)
+{
+    CommTransmitFillData(&Tx1,
+                         WUSONG_VERSION_HIGH_RESPONSE,
+                         (uint8_t)(WUSONG_APP_VERSION >> 24U),
+                         (uint8_t)(WUSONG_APP_VERSION >> 16U));
+    CommTransmitFillData(&Tx1,
+                         WUSONG_VERSION_LOW_RESPONSE,
+                         (uint8_t)(WUSONG_APP_VERSION >> 8U),
+                         (uint8_t)WUSONG_APP_VERSION);
+}
+
+/* 停止输出设备，保留升级请求并复位进入Bootloader。 */
+static void Board_EnterBootloader(void)
+{
+    if (!Board_WriteBootRequest(OTA_REQUEST_MAGIC))
+    {
+        /* E0 01表示RTC备份寄存器写入失败。 */
+        CommTransmitFillData(&Tx1, WUSONG_SYSTEM_COMMAND, 0xE0U, 0x01U);
+        return;
+    }
+
+    /* 先返回确认帧，再停止设备并复位，避免上位机误判命令未收到。 */
+    CommTransmitFillData(&Tx1,
+                         WUSONG_SYSTEM_COMMAND,
+                         WUSONG_OTA_KEY_HIGH,
+                         WUSONG_OTA_KEY_LOW);
+    Device_Stop();
+    HAL_Delay(100U);
+    System_Reset();
+}
+
 static void AntiShake_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -218,11 +291,22 @@ static void USART1_Deal(void *Rx_mesg)
         break;
     case 0x0D: // 重新綁卡
 
-    case 0x0E: // 球盘重启
+    case 0x0E: // 球盘重启（保留原有未文档化命令）
         System_Reset();
         break;
     case 0x0F: // 开锁
         EventGroupSetBits(&Mesg_event, MesgEvent_Unlock);
+        break;
+    case WUSONG_SYSTEM_COMMAND:
+        if (mesg->Data1 == 0x00U && mesg->Data2 == 0x00U)
+        {
+            Board_SendVersion();
+        }
+        else if (mesg->Data1 == WUSONG_OTA_KEY_HIGH &&
+                 mesg->Data2 == WUSONG_OTA_KEY_LOW)
+        {
+            Board_EnterBootloader();
+        }
         break;
     case 0xFF: // 停止所有输出
         Device_Stop();
@@ -304,10 +388,11 @@ void CommTask(void)
 void CommTransmitFillData(Tx_HandleTypeDef *Tx, uint8_t code, uint8_t data1, uint8_t data2)
 {
     uint8_t data[7] = {Mesg_Head, 0x00, 0x00, 0x00, 0x00, 0x00, Mesg_Tail};
+    uint16_t crc16;
     data[1] = code;
     data[2] = data1;
     data[3] = data2;
-    uint16_t crc16 = CRC16_calculate(data, 4);
+    crc16 = CRC16_calculate(data, 4);
     data[4] = (crc16 >> 8) & 0xFF;
     data[5] = crc16 & 0xFF;
     Tx->Transimit(Tx, data, 7);
