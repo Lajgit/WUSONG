@@ -168,15 +168,34 @@ static void USART1_Deal(void *Rx_mesg)
         }
         break;
     case 0x05: // 设置场景
-        if (Scene == SCENE_PLAYING && mesg->Data2 == 6)
-            return;
-        Scene = mesg->Data2;
+    {
+        Scene_t new_scene;
+        if (mesg->Data2 > (uint8_t)SCENE_END)
+        {
+            break; // 非法场景编号
+        }
+      
+        new_scene = (Scene_t)mesg->Data2;
+
+        if (Scene == SCENE_PLAYING && new_scene == SCENE_PLAYING)
+        {
+            break; // 重复游玩场景，不重新初始化
+        }
+        Scene = new_scene;
         Light.Init = true;
         EventGroupSetBits(&Event, Event_SceneChange);
         BreathLight_RefreshState(BreathList, 6);
         SemaphoreGive(Light.Semaphore);
         break;
+    }
     case 0x06: // 设置中奖通道
+        /* Unity可能重发相同的中奖通道，内容一致时不重复设置 */
+        if (sm16306s_data[0] == mesg->Data1 &&
+        sm16306s_data[1] == mesg->Data2 &&
+        (mesg->Data1 != 0x00 || mesg->Data2 != 0x00))
+        {
+            break;
+        }
         sm16306s_data[0] = mesg->Data1;
         sm16306s_data[1] = mesg->Data2;
         SM16306S_SetLight(sm16306s_data);   // 设置中奖灯
