@@ -51,7 +51,7 @@ static void Switch_ShortCallback(uint16_t id)
         else
             CommTransmitFillData(&Tx1, 0x15, 0x01, 0x07);   //输
     }
-    CommTransmitFillData(&Tx3, 0x1f, 0x00, id); //微动编号
+    CommTransmitFillData(&Tx1, 0x1f, 0x00, id); //微动编号
 }
 
 static void Switch_Init(void)
@@ -286,9 +286,11 @@ void KeyAll_Init(void)
 void Key_Task(void)
 {
     if (Scene == SCENE_PLAYING || Scene == SCENE_ADDITIONAL)
-        Switch_MatchCheck();
+        Key_Scan(Switch_list, 12);
+
     if (Scene == SCENE_SETTING)
         Switch_Check();
+
     Key_Scan(KeyBoard_list, 3);
     Key_Scan(Key_list, 5);
     Key_Scan(Hole_list, 2);
