@@ -195,6 +195,7 @@ static void USART1_Deal(void *Rx_mesg)
         // 清珠
         if (mesg->Data1 == 0x01)
         {
+             Motor_Hoolle1.ClearMode = 1;
             Hoolle_Output(&Motor_Hoolle1, 0xFFFF - Motor_Hoolle1.Hoolle_num);
         }
         // 吐出剩余

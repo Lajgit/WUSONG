@@ -19,6 +19,7 @@ typedef struct
     motor_t Motor;
     volatile uint16_t Hoolle_num;
     volatile uint8_t RetryCount;
+    volatile uint8_t ClearMode;
 } Motor_Hoolle;
 
 typedef struct
