@@ -155,9 +155,15 @@ static void PublicRatioLight(void)
 {
     if (EventGroupCheckBits(&Event, Event_SceneChange) == true)
     {
+        /*
+         * 进入公开倍率场景时，清除上一局中奖通道。
+         * Unity会在公开倍率结束后下发本局新的中奖通道。
+         */
         sm16306s_data[0] = 0x00;
         sm16306s_data[1] = 0x00;
-        SM16306S_SetLight(sm16306s_data);
+
+        SM16306S_SetLight(sm16306s_data);   // 熄灭上一局通道灯
+        SM16306S_SetChannel(sm16306s_data); // 清除上一局WinState
         EventGroupClearBits(&Event, Event_SceneChange);
         Left_Valve.Switch.state = DEVICE_STATE_STOP;
         Right_Valve.Switch.state = DEVICE_STATE_STOP;
