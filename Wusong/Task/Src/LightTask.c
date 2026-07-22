@@ -26,7 +26,7 @@ extern Event_Handle_t Event;
 extern Scene_t Scene;
 void Light_Init(void)
 {
-    RGB_Init(&Light, &htim3, TIM_CHANNEL_4, Light_RGBbuffer_SIZE, Light_RGBbuffer, Light_CRRbuffer, &Light_Semaphore, BRG);
+    RGB_Init(&Light, &htim3, TIM_CHANNEL_4, Light_RGBbuffer_SIZE, Light_RGBbuffer, Light_CRRbuffer, &Light_Semaphore, RGB);
     BreathLight_Init(&J20, &htim2, TIM_CHANNEL_1, GPIOA, GPIO_PIN_15);
     BreathLight_Init(&J21, &htim2, TIM_CHANNEL_2, GPIOB, GPIO_PIN_3);
     BreathLight_Init(&J22, &htim5, TIM_CHANNEL_4, GPIOA, GPIO_PIN_3);
