@@ -1,0 +1,244 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.14.0.0
+Copyright (C) 2015 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: ddd PC, dd, LIC=X96CK-Z6N2X-Z9JG9-422IT-7HGE1-UE8PR
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Standard  Version: 5.14.0.0
+Toolchain Path:  E:\Keil5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.05 update 1 (build 106)
+Assembler:       Armasm.exe V5.05 update 1 (build 106)
+Linker/Locator:  ArmLink.exe V5.05 update 1 (build 106)
+Library Manager: ArmAr.exe V5.05 update 1 (build 106)
+Hex Converter:   FromElf.exe V5.05 update 1 (build 106)
+CPU DLL:         SARMCM3.DLL V5.14.0.0
+Dialog DLL:      DCM.DLL V1.13.1.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V2.0.14.0_KEIL
+Dialog DLL:      TCM.DLL V1.14.4.0
+ 
+<h2>Project:</h2>
+E:\单片机项目\Source\Project\Wusong_New_1.7_fixed\Wusong\MDK-ARM\Wusong_New_1.7.uvprojx
+Project File Date:  06/22/2026
+
+<h2>Output:</h2>
+Rebuild target 'Wusong_New_1.7'
+assembling startup_stm32f407xx.s...
+compiling main.c...
+compiling gpio.c...
+compiling dma.c...
+compiling iwdg.c...
+compiling spi.c...
+compiling tim.c...
+compiling usart.c...
+compiling stm32f4xx_it.c...
+../Port/Inc/port_lighteffect.h(91): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Core/Src/stm32f4xx_it.c: 1 warning, 0 errors
+compiling stm32f4xx_hal_msp.c...
+compiling stm32f4xx_hal_iwdg.c...
+compiling stm32f4xx_hal_rcc.c...
+compiling stm32f4xx_hal_rcc_ex.c...
+compiling stm32f4xx_hal_flash.c...
+compiling stm32f4xx_hal_flash_ex.c...
+compiling stm32f4xx_hal_flash_ramfunc.c...
+compiling stm32f4xx_hal_gpio.c...
+compiling stm32f4xx_hal_dma_ex.c...
+compiling stm32f4xx_hal_dma.c...
+compiling stm32f4xx_hal_pwr.c...
+compiling stm32f4xx_hal_pwr_ex.c...
+compiling stm32f4xx_hal_cortex.c...
+compiling stm32f4xx_hal.c...
+compiling stm32f4xx_hal_exti.c...
+compiling stm32f4xx_hal_spi.c...
+compiling stm32f4xx_hal_tim.c...
+compiling stm32f4xx_hal_tim_ex.c...
+compiling stm32f4xx_hal_uart.c...
+compiling system_stm32f4xx.c...
+compiling app_crc.c...
+../Lib/Inc/app_crc.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Lib\Src\app_crc.c(73): warning:  #1-D: last line of file ends without a newline
+  }
+..\Lib\Src\app_crc.c: 2 warnings, 0 errors
+compiling app_device.c...
+..\Lib\Src\app_device.c(88): warning:  #1-D: last line of file ends without a newline
+  }
+..\Lib\Src\app_device.c: 1 warning, 0 errors
+compiling app_flash.c...
+..\Lib\Src\app_flash.c(177): warning:  #1-D: last line of file ends without a newline
+  }
+..\Lib\Src\app_flash.c: 1 warning, 0 errors
+compiling app_list.c...
+../Lib/Inc/app_list.h(29): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Lib\Src\app_list.c: 1 warning, 0 errors
+compiling app_ringbuf.c...
+..\Lib\Src\app_ringbuf.c(232): warning:  #1-D: last line of file ends without a newline
+  }
+..\Lib\Src\app_ringbuf.c: 1 warning, 0 errors
+compiling app_softspi.c...
+../Lib/Inc/app_softspi.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Lib\Src\app_softspi.c(24): warning:  #188-D: enumerated type mixed with another type
+          HAL_GPIO_WritePin(hspi->SPI_SDA_GPIOPORT, hspi->SPI_SDA_GPIOPIN, (data & (0x80 >> i)));
+..\Lib\Src\app_softspi.c(30): warning:  #188-D: enumerated type mixed with another type
+      HAL_GPIO_WritePin(hspi->SPI_CS_GPIOPORT, hspi->SPI_CS_GPIOPIN, !hspi->CS_Level);
+..\Lib\Src\app_softspi.c(52): warning:  #188-D: enumerated type mixed with another type
+              HAL_GPIO_WritePin(hspi->SPI_SDA_GPIOPORT, hspi->SPI_SDA_GPIOPIN, (pData[i] & (0x80 >> j)));
+..\Lib\Src\app_softspi.c(59): warning:  #188-D: enumerated type mixed with another type
+      HAL_GPIO_WritePin(hspi->SPI_CS_GPIOPORT, hspi->SPI_CS_GPIOPIN, !hspi->CS_Level);
+..\Lib\Src\app_softspi.c: 5 warnings, 0 errors
+compiling app_ws2812.c...
+..\Lib\Src\app_ws2812.c(376): warning:  #1-D: last line of file ends without a newline
+  }
+..\Lib\Src\app_ws2812.c: 1 warning, 0 errors
+compiling app_sm16306s.c...
+../Lib/Inc/app_sm16306s.h(16): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Lib\Src\app_sm16306s.c(58): warning:  #1-D: last line of file ends without a newline
+  }
+..\Lib\Src\app_sm16306s.c: 2 warnings, 0 errors
+compiling port_communicate.c...
+../Port/Inc/port_communicate.h(82): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Port\Src\port_communicate.c: 1 warning, 0 errors
+compiling port_device.c...
+..\Port\Src\port_device.c(219): warning:  #188-D: enumerated type mixed with another type
+      HAL_GPIO_WritePin(S->gpio, S->pin, !(S->level));
+..\Port\Src\port_device.c(263): warning:  #188-D: enumerated type mixed with another type
+      Switch_SetState(Switch->gpio, Switch->pin, !(Switch->level));
+..\Port\Src\port_device.c(264): warning:  #1-D: last line of file ends without a newline
+  }
+..\Port\Src\port_device.c: 3 warnings, 0 errors
+compiling port_event.c...
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Port\Src\port_event.c(18): warning:  #1-D: last line of file ends without a newline
+  }
+..\Port\Src\port_event.c: 2 warnings, 0 errors
+compiling port_flash.c...
+..\Port\Src\port_flash.c(36): warning:  #1-D: last line of file ends without a newline
+  }
+..\Port\Src\port_flash.c: 1 warning, 0 errors
+compiling port_key.c...
+..\Port\Src\port_key.c(23): warning:  #188-D: enumerated type mixed with another type
+      key->last_state = !key->trigger_level;
+..\Port\Src\port_key.c(130): warning:  #1-D: last line of file ends without a newline
+  }
+..\Port\Src\port_key.c: 2 warnings, 0 errors
+compiling port_light.c...
+..\Port\Src\port_light.c(21): warning:  #1-D: last line of file ends without a newline
+  }
+..\Port\Src\port_light.c: 1 warning, 0 errors
+compiling port_lighteffect.c...
+../Port/Inc/port_lighteffect.h(91): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Port\Src\port_lighteffect.c(1203): warning:  #1-D: last line of file ends without a newline
+  }
+..\Port\Src\port_lighteffect.c: 2 warnings, 0 errors
+compiling CommTask.c...
+../Port/Inc/port_communicate.h(82): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_list.h(29): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_lighteffect.h(91): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_crc.h(9): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_sm16306s.h(16): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\CommTask.c: 6 warnings, 0 errors
+compiling CtrlTask.c...
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\CtrlTask.c(322): warning:  #1-D: last line of file ends without a newline
+  }
+..\Task\Src\CtrlTask.c: 2 warnings, 0 errors
+compiling FlashTask.c...
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\FlashTask.c(43): warning:  #1-D: last line of file ends without a newline
+  }
+..\Task\Src\FlashTask.c: 2 warnings, 0 errors
+compiling InterruptTask.c...
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_communicate.h(82): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_list.h(29): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\InterruptTask.c: 3 warnings, 0 errors
+compiling KeyTask.c...
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_communicate.h(82): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_list.h(29): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_sm16306s.h(16): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\KeyTask.c(263): warning:  #177-D: function "Switch_MatchCheck" was declared but never referenced
+  static void Switch_MatchCheck(void)
+..\Task\Src\KeyTask.c: 5 warnings, 0 errors
+compiling LightTask.c...
+../Port/Inc/port_lighteffect.h(91): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_sm16306s.h(16): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\LightTask.c(344): warning:  #1-D: last line of file ends without a newline
+  }
+..\Task\Src\LightTask.c: 4 warnings, 0 errors
+compiling MainTask.c...
+../Port/Inc/port_communicate.h(82): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_list.h(29): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_lighteffect.h(91): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\MainTask.c(56): warning:  #1-D: last line of file ends without a newline
+  }
+..\Task\Src\MainTask.c: 5 warnings, 0 errors
+compiling MesgTask.c...
+../Port/Inc/port_event.h(28): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Port/Inc/port_communicate.h(82): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Lib/Inc/app_list.h(29): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Task\Src\MesgTask.c(86): warning:  #1-D: last line of file ends without a newline
+  }
+..\Task\Src\MesgTask.c: 4 warnings, 0 errors
+linking...
+Program Size: Code=27160 RO-data=456 RW-data=336 ZI-data=24856  
+FromELF: creating hex file...
+"Wusong_New_1.7\Wusong_New_1_7.axf" - 0 Error(s), 58 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.2.0.pack
+                ARM::CMSIS:CORE:3.40.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 3.40.0
+
+<h2>Collection of Component include folders:</h2>
+  E:\单片机项目\Source\Project\Wusong_New_1.7_fixed\Wusong\MDK-ARM\RTE
+  E:\Keil5\ARM\PACK\ARM\CMSIS\4.2.0\CMSIS\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:3.40.0
+      Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
+</pre>
+</body>
+</html>

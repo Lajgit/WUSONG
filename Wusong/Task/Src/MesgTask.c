@@ -22,65 +22,65 @@ void Mesg_Task(void)
     // 按键进入设置
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_ButtonEnterSetting))
     {
-        CommTransmitFillData(&Tx1, 0x13, 0x01, 0x03);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_SettingButton, 0x03, 0x01);
         EventGroupClearBits(&Mesg_event, MesgEvent_ButtonEnterSetting);
     }
     // 开锁
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_Unlock) == true)
     {
         Tx3.Transimit(&Tx3, NFCUnlock_mesg, sizeof(NFCUnlock_mesg)); // 向NFC发送开锁
-        CommTransmitFillData(&Tx1, 0x19, 0x03, 0x01);                // 向安卓发送已开锁
+        CommTransmitFillData(&Tx1, Board_to_Android, t_Unlock, 0x00, 0x00);                // 向安卓发送已开锁
         Valve_Start(&Lock_Valve,1);
         EventGroupClearBits(&Mesg_event, MesgEvent_Unlock);
     }
     // 投珠
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_HoolleInput) == true)
     {
-        CommTransmitFillData(&Tx1, 0x11, 0x01, 0x02);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_HoolleInput, 0x00, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_HoolleInput);
     }
     // 投币
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_CoinInput) == true)
     {
-        CommTransmitFillData(&Tx1, 0x11, 0x01, 0x03);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_Coin, 0x00, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_CoinInput);
     }
 #ifndef BEIJING_NXH_VERSION
     // 吐珠超时
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_HoolleOutputTimeout))
     {
-        CommTransmitFillData(&Tx1, 0x16, Motor_Hoolle1.Hoolle_num >> 8, Motor_Hoolle1.Hoolle_num & 0xFF);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_HoolleTimeout, Motor_Hoolle1.Hoolle_num, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_HoolleOutputTimeout);
     }
 #endif
     // 吐卡超时
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_CardOutputTimeout))
     {
-        CommTransmitFillData(&Tx1, 0x17, Card.Card_num >> 8, Card.Card_num & 0xFF);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_CardTimeout, Card.Card_num, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_CardOutputTimeout);
     }
     // 剩余珠子数
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_RemainingHoolle) == true)
     {
-        CommTransmitFillData(&Tx1, 0x1C, Motor_Hoolle1.Hoolle_num >> 8, Motor_Hoolle1.Hoolle_num & 0xFF);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_Remaining, Motor_Hoolle1.Hoolle_num, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_RemainingHoolle);
     }
     // NFC进入设置
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_NFCEnterSetting) == true)
     {
-        CommTransmitFillData(&Tx1, 0x18, 0x01, 0x01);
+        // 已废弃的安卓上报停用，保留NFC事件处理。
         EventGroupClearBits(&Mesg_event, MesgEvent_NFCEnterSetting);
     }
     // 吐卡一次
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_CardOutputOnce) == true)
     {
-        CommTransmitFillData(&Tx1, 0x15, 0x01, 0x04);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_CardOnce, 0x00, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_CardOutputOnce);
     }
     // 吐卡完成
     if (EventGroupCheckBits(&Mesg_event, MesgEvent_CardOutputFinish) == true)
     {
-        CommTransmitFillData(&Tx1, 0x15, 0x01, 0x05);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_CardFinish, 0x00, 0x00);
         EventGroupClearBits(&Mesg_event, MesgEvent_CardOutputFinish);
     }
 }

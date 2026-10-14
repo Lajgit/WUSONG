@@ -13,7 +13,7 @@
 #define Mesg_Head 0xAA
 #define Mesg_Tail 0x55
 
-#define ANTI_SHAKE_CODE 0x20
+#define ANTI_SHAKE_CODE t_AntiShake
 #define ANTI_SHAKE_TRIGGER 0x00
 #define ANTI_SHAKE_RELEASE 0x01
 #define ANTI_SHAKE_SCAN_PERIOD 10U
@@ -31,7 +31,7 @@ Rx_HandleTypeDef Rx1;
 Tx_HandleTypeDef Tx3;
 Rx_HandleTypeDef Rx3;
 
-USART1_MesgTypeDef USART1_Mesg;
+Mesg_TypeDef USART1_Mesg;
 USART3_MesgTypeDef USART3_Mesg;
 
 extern Motor_Hoolle Motor_Hoolle1;
@@ -68,10 +68,10 @@ static void AntiShake_Init(void)
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 }
 
-/* 使用现有7字节协议发送防摇消息，状态放在低位数据Data2 */
+/* 使用14字节协议发送防摇消息，状态放在低位数据Data4 */
 static void AntiShake_Transmit(uint8_t state)
 {
-    CommTransmitFillData(&Tx1, ANTI_SHAKE_CODE, 0x00, state);
+    CommTransmitFillData(&Tx1, Board_to_Android, ANTI_SHAKE_CODE, state, 0x00);
 }
 
 static void AntiShake_Task(void)
@@ -127,9 +127,12 @@ static void AntiShake_Task(void)
 static bool USART1_ReceiveMesg_Verify(void *self, void *mesg)
 {
     Rx_HandleTypeDef *rx = (Rx_HandleTypeDef *)self;
-    USART1_MesgTypeDef *Rx_mesg = (USART1_MesgTypeDef *)mesg;
+    Mesg_TypeDef *Rx_mesg = (Mesg_TypeDef *)mesg;
     uint16_t crc16, mesg_crc16;
-    crc16 = CRC16_calculate(rx->Queue.Buf, 4);
+    if (rx->Queue.Index != sizeof(Mesg_TypeDef) - 1 ||
+        Rx_mesg->Head != Mesg_Head || Rx_mesg->Tail != Mesg_Tail)
+        return false;
+    crc16 = CRC16_calculate(rx->Queue.Buf, 11);
     mesg_crc16 = Rx_mesg->CRC16_H << 8 | Rx_mesg->CRC16_L;
     if (crc16 == mesg_crc16)
         return true;
@@ -138,44 +141,53 @@ static bool USART1_ReceiveMesg_Verify(void *self, void *mesg)
 
 static void USART1_Deal(void *Rx_mesg)
 {
-    USART1_MesgTypeDef *mesg = (USART1_MesgTypeDef *)Rx_mesg;
-    uint16_t data;
-    switch (mesg->Code)
+    Mesg_TypeDef *mesg = (Mesg_TypeDef *)Rx_mesg;
+    uint32_t data;
+
+    if (mesg->Code1 != Android_to_Board)
+        return;
+
+    data = ((uint32_t)mesg->Data1 << 24) | ((uint32_t)mesg->Data2 << 16) |
+           ((uint32_t)mesg->Data3 << 8) | mesg->Data4;
+
+    /* 与弹界通信层一致，按原方向和ID回传请求帧作为应答。 */
+    if (mesg->ACK == 0x01)
+        Tx1.Transimit(&Tx1, (uint8_t *)mesg, sizeof(Mesg_TypeDef));
+
+    switch (mesg->Code2)
     {
-    case 0x01: // 吐珠
-        data = (mesg->Data1 << 8) | mesg->Data2;
+    case r_HoolleOutput: // 吐珠
+        if (data > 0xFFFFU)
+            break; // 原机构计数为16位，拒绝超范围数量
         Hoolle_Output(&Motor_Hoolle1, data);
         EventGroupSetBits(&Mesg_event, MesgEvent_RemainingHoolle);
         break;
-    case 0x02: // 出卡
-        data = (mesg->Data1 << 8) | mesg->Data2;
+    case r_CardOutput: // 出卡
+        if (data > 0xFFFFU)
+            break; // 原机构计数为16位，拒绝超范围数量
         Card_Output(&Card, data);
         EventGroupSetBits(&Mesg_event, MesgEvent_RemainingHoolle);
         break;
-    case 0x03: // 挡珠电磁阀
+    case r_ValveOutput: // 挡珠电磁阀
         Valve_Start(&Valve, 1);
         break;
-    case 0x04: // 亮度调节
-        if (mesg->Data1 == 0x01)
-        {
-            Setting.Board_Lightness = mesg->Data2;
-            Light.Init = true;
-        }
-        else if (mesg->Data1 == 0x05)
-        {
-            Setting.LightBelt_Lightness = mesg->Data2;
-            BreathLight_RefreshState(BreathList, 6);
-        }
+    case r_LightBrightness: // 球盘亮度调节
+        Setting.Board_Lightness = mesg->Data4;
+        Light.Init = true;
         break;
-    case 0x05: // 设置场景
+    case r_LightBeltBrightness: // 灯带亮度调节
+        Setting.LightBelt_Lightness = mesg->Data4;
+        BreathLight_RefreshState(BreathList, 6);
+        break;
+    case r_SceneChange: // 设置场景
     {
         Scene_t new_scene;
-        if (mesg->Data2 > (uint8_t)SCENE_END)
+        if (mesg->Data4 > (uint8_t)SCENE_END)
         {
             break; // 非法场景编号
         }
       
-        new_scene = (Scene_t)mesg->Data2;
+        new_scene = (Scene_t)mesg->Data4;
 
         if (Scene == SCENE_PLAYING && new_scene == SCENE_PLAYING)
         {
@@ -188,63 +200,50 @@ static void USART1_Deal(void *Rx_mesg)
         SemaphoreGive(Light.Semaphore);
         break;
     }
-    case 0x06: // 设置中奖通道
+    case r_ChannelLight: // 设置中奖通道
         /* Unity可能重发相同的中奖通道，内容一致时不重复设置 */
-        if (sm16306s_data[0] == mesg->Data1 &&
-        sm16306s_data[1] == mesg->Data2 &&
-        (mesg->Data1 != 0x00 || mesg->Data2 != 0x00))
+        if (sm16306s_data[0] == mesg->Data3 &&
+        sm16306s_data[1] == mesg->Data4 &&
+        (mesg->Data3 != 0x00 || mesg->Data4 != 0x00))
         {
             break;
         }
-        sm16306s_data[0] = mesg->Data1;
-        sm16306s_data[1] = mesg->Data2;
+        sm16306s_data[0] = mesg->Data3;
+        sm16306s_data[1] = mesg->Data4;
         SM16306S_SetLight(sm16306s_data);   // 设置中奖灯
         SM16306S_SetChannel(sm16306s_data); // 设置中奖通道
         break;
-    case 0x07: // 接收开心30s游戏中奖状态
-        if (mesg->Data2 == 0x01)
-            EventGroupSetBits(&Event, Event_Happy30s_Win);
-        else if (mesg->Data2 == 0x00)
-            EventGroupSetBits(&Event, Event_Happy30s_Lose);
+    /* 开心30s输赢命令暂时禁用，武松新协议未定义对应功能码。 */
+    case r_ButtonLight: // 设置拍拍按键灯光
+        ButtonLight_Position = mesg->Data4;
         break;
-    case 0x08: // 设置拍拍按键灯光
-        ButtonLight_Position = mesg->Data2;
+    case r_ClearOutput: // 清珠
+        Motor_Hoolle1.ClearMode = 1;
+        Hoolle_Output(&Motor_Hoolle1, 0xFFFF - Motor_Hoolle1.Hoolle_num);
         break;
-    case 0x09:
-        // 清珠
-        if (mesg->Data1 == 0x01)
-        {
-             Motor_Hoolle1.ClearMode = 1;
-            Hoolle_Output(&Motor_Hoolle1, 0xFFFF - Motor_Hoolle1.Hoolle_num);
-        }
-        // 吐出剩余
-        else if (mesg->Data1 == 0x03)
-        {
-            Hoolle_Output(&Motor_Hoolle1, 0);
-            Card_Output(&Card, 0);
-            // Clear a ball still held in either mini-game hole.
-            MiniGameBall_EjectIfOccupied();
-        }
+    case r_OutputRemaining: // 吐出剩余
+        Hoolle_Output(&Motor_Hoolle1, 0);
+        Card_Output(&Card, 0);
+        // Clear a ball still held in either mini-game hole.
+        MiniGameBall_EjectIfOccupied();
         break;
-    case 0x0A: // 保存设置
+    case r_SaveSetting: // 保存设置
         EventGroupSetBits(&Event, Event_SaveSetting);
         break;
-    case 0x0B: // 恢复默认设置
+    case r_ResumeSetting: // 恢复默认设置
         ResumeSetting();
         break;
-    case 0x0C: // 左右电磁阀触发
+    case r_HoleValveOutput: // 左右电磁阀触发
         Valve_Start(&Left_Valve, Valve_TriggerCount);
         Valve_Start(&Right_Valve, Valve_TriggerCount);
         break;
-    case 0x0D: // 重新綁卡
-
-    case 0x0E: // 球盘重启
+    case r_SystemReset: // 球盘重启
         System_Reset();
         break;
-    case 0x0F: // 开锁
+    case r_Unlock: // 开锁
         EventGroupSetBits(&Mesg_event, MesgEvent_Unlock);
         break;
-    case 0xFF: // 停止所有输出
+    case r_DeviceStop: // 停止所有输出
         Device_Stop();
         EventGroupSetBits(&Mesg_event, MesgEvent_CardOutputFinish); // 吐卡完成
         break;
@@ -288,6 +287,7 @@ void CommInit(void)
     Rxinit.RingBuf_Size = sizeof(rx1_buffer);
     Rxinit.Frame_Head = Mesg_Head;
     Rxinit.Frame_Tail = Mesg_Tail;
+    Rxinit.Mesg_Len = sizeof(Mesg_TypeDef);
     Rxinit.Receive = NULL;
     Rxinit.Verify = USART1_ReceiveMesg_Verify;
     Rxinit.Deal = USART1_Deal;
@@ -297,6 +297,7 @@ void CommInit(void)
     Rxinit.huart = &huart3;
     Rxinit.RingBuf = rx3_buffer;
     Rxinit.RingBuf_Size = sizeof(rx3_buffer);
+    Rxinit.Mesg_Len = sizeof(USART3_MesgTypeDef);
     Rxinit.Verify = USART3_ReceiveMesg_Verify;
     Rxinit.Deal = USART3_Deal;
     Communicate_Rx_Init(&Rx3, Rxinit);
@@ -316,19 +317,48 @@ void CommInit(void)
 
 void CommTask(void)
 {
-    Rx1.Receive(&Rx1, &USART1_Mesg, 7);
-    Rx3.Receive(&Rx3, &USART3_Mesg, 11);
+    Rx1.Receive(&Rx1, &USART1_Mesg, sizeof(Mesg_TypeDef));
+    Rx3.Receive(&Rx3, &USART3_Mesg, sizeof(USART3_MesgTypeDef));
     AntiShake_Task();
 }
 
-void CommTransmitFillData(Tx_HandleTypeDef *Tx, uint8_t code, uint8_t data1, uint8_t data2)
+void CommTransmitFillData(Tx_HandleTypeDef *Tx, uint8_t code_1, uint8_t code_2, uint32_t data, uint8_t expandCode)
 {
-    uint8_t data[7] = {Mesg_Head, 0x00, 0x00, 0x00, 0x00, 0x00, Mesg_Tail};
-    data[1] = code;
-    data[2] = data1;
-    data[3] = data2;
-    uint16_t crc16 = CRC16_calculate(data, 4);
-    data[4] = (crc16 >> 8) & 0xFF;
-    data[5] = crc16 & 0xFF;
-    Tx->Transimit(Tx, data, 7);
+    static uint8_t ID = 0;
+    uint8_t mesg[14] = {0};
+    uint16_t crc16;
+
+    mesg[0] = Mesg_Head;
+    mesg[2] = ++ID;
+    mesg[3] = code_1;
+    mesg[4] = code_2;
+    mesg[5] = (uint8_t)(data >> 24);
+    mesg[6] = (uint8_t)(data >> 16);
+    mesg[7] = (uint8_t)(data >> 8);
+    mesg[8] = (uint8_t)data;
+    mesg[10] = expandCode;
+
+    switch (code_2)
+    {
+    case t_HoolleInput:
+    case t_Coin:
+    case t_HoolleTimeout:
+    case t_CardTimeout:
+    case t_Switch:
+    case t_Hole:
+    case t_HoolleFinish:
+    case t_CardOnce:
+    case t_CardFinish:
+    case t_Win:
+    case t_Lose:
+    case t_AntiShake:
+        mesg[9] = 0x01;
+        break;
+    }
+
+    crc16 = CRC16_calculate(mesg, 11);
+    mesg[11] = (uint8_t)(crc16 >> 8);
+    mesg[12] = (uint8_t)crc16;
+    mesg[13] = Mesg_Tail;
+    Tx->Transimit(Tx, mesg, sizeof(mesg));
 }

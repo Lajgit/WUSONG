@@ -47,11 +47,11 @@ static void Switch_ShortCallback(uint16_t id)
     if (Scene == SCENE_PLAYING || Scene == SCENE_ADDITIONAL)
     {
         if (WinState[id] == true)
-            CommTransmitFillData(&Tx1, 0x15, 0x01, 0x06);   //赢
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Win, 0x00, 0x00);   //赢
         else
-            CommTransmitFillData(&Tx1, 0x15, 0x01, 0x07);   //输
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Lose, 0x00, 0x00);   //输
     }
-    CommTransmitFillData(&Tx1, 0x1f, 0x00, id); //微动编号
+    CommTransmitFillData(&Tx1, Board_to_Android, t_Switch, id, 0x00); //微动编号
 }
 
 static void Switch_Init(void)
@@ -82,7 +82,7 @@ static void Switch_Init(void)
 static void KeyBoard_ShortCallback(uint16_t id)
 {
     if (id <= 1)
-        CommTransmitFillData(&Tx1, 0x13, 0x01, id + 1);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_SettingButton, id + 1, 0x01);
     if (id == 2)
         EventGroupSetBits(&Mesg_event, MesgEvent_Unlock);
 }
@@ -90,7 +90,7 @@ static void KeyBoard_ShortCallback(uint16_t id)
 static void KeyBoard_LongCallback(uint16_t id)
 {
     if (id <= 1)
-        CommTransmitFillData(&Tx1, 0x13, 0x02, id + 1);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_SettingButton, id + 1, 0x02);
     if (id == 2)
     {
         if (EventGroupCheckBits(&Key_event, Event_SettingButtonPress) == false)
@@ -148,7 +148,7 @@ static void Hole_LongCallback(uint16_t id)
     {
         if (EventGroupCheckBits(&Event, Event_LeftHoleInside) == false)
         {
-            CommTransmitFillData(&Tx1, 0x14, 0x01, 0x00);
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Hole, 0x00, 0x00);
             if (Scene != SCENE_ADDITIONAL && Scene != SCENE_PLAYING && Scene != SCENE_HAPPY1 && Scene != SCENE_HAPPY2 && Scene != SCENE_SETTING)
             {
                 MiniGameBall_EjectIfOccupied();
@@ -160,7 +160,7 @@ static void Hole_LongCallback(uint16_t id)
     {
         if (EventGroupCheckBits(&Event, Event_RightHoleInside) == false)
         {
-            CommTransmitFillData(&Tx1, 0x14, 0x01, 0x01);
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Hole, 0x01, 0x00);
             if (Scene != SCENE_ADDITIONAL && Scene != SCENE_PLAYING && Scene != SCENE_HAPPY1 && Scene != SCENE_HAPPY2 && Scene != SCENE_SETTING)
             {
                 MiniGameBall_EjectIfOccupied();
@@ -210,13 +210,13 @@ static void Hole_Init(void)
 static void Key_ShortCallback(uint16_t id)
 {
     if (id <= 4)
-        CommTransmitFillData(&Tx1, 0x12, 0x01, id + 1);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_Button, id + 1, 0x01);
 }
 
 static void Key_LongCallback(uint16_t id)
 {
     if (id <= 4)
-        CommTransmitFillData(&Tx1, 0x12, 0x02, id + 1);
+        CommTransmitFillData(&Tx1, Board_to_Android, t_Button, id + 1, 0x02);
 }
 
 static void Key_ReleaseCallback(uint16_t id)
@@ -267,10 +267,10 @@ static void Switch_MatchCheck(void)
         if (HAL_GPIO_ReadPin(Switch_GPIOPort[i], Switch_Pin[i]) == GPIO_PIN_RESET)
         {
             if (WinState[i] == true)
-                CommTransmitFillData(&Tx1, 0x15, 0x01, 0x06);
+                CommTransmitFillData(&Tx1, Board_to_Android, t_Win, 0x00, 0x00);
             else
-                CommTransmitFillData(&Tx1, 0x15, 0x01, 0x07);
-            CommTransmitFillData(&Tx1, 0x1f, 0x00, i);
+                CommTransmitFillData(&Tx1, Board_to_Android, t_Lose, 0x00, 0x00);
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Switch, i, 0x00);
             break;
         }
     }
