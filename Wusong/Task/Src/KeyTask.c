@@ -42,16 +42,11 @@ extern Scene_t Scene;
 /*
  * ----------微动初始化----------
  */
+static void Switch_MatchCheck(uint16_t id);
+
 static void Switch_ShortCallback(uint16_t id)
 {
-    if (Scene == SCENE_PLAYING || Scene == SCENE_ADDITIONAL)
-    {
-        if (WinState[id] == true)
-            CommTransmitFillData(&Tx1, Board_to_Android, t_Win, 0x00, 0x00);   //赢
-        else
-            CommTransmitFillData(&Tx1, Board_to_Android, t_Lose, 0x00, 0x00);   //输
-    }
-    CommTransmitFillData(&Tx1, Board_to_Android, t_Switch, id, 0x00); //微动编号
+    Switch_MatchCheck(id);
 }
 
 static void Switch_Init(void)
@@ -260,21 +255,18 @@ static void Switch_Check(void)
     SM16306S_SetLight(Light);
 }
 
-static void Switch_MatchCheck(void)
+static void Switch_MatchCheck(uint16_t id)
 {
-    for (uint8_t i = 0; i < 12; i++)
+    if (Scene == SCENE_PLAYING || Scene == SCENE_ADDITIONAL)
     {
-        if (HAL_GPIO_ReadPin(Switch_GPIOPort[i], Switch_Pin[i]) == GPIO_PIN_RESET)
-        {
-            if (WinState[i] == true)
-                CommTransmitFillData(&Tx1, Board_to_Android, t_Win, 0x00, 0x00);
-            else
-                CommTransmitFillData(&Tx1, Board_to_Android, t_Lose, 0x00, 0x00);
-            CommTransmitFillData(&Tx1, Board_to_Android, t_Switch, i, 0x00);
-            break;
-        }
+        if (WinState[id] == true)
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Win, 0x00, 0x00);   //赢
+        else
+            CommTransmitFillData(&Tx1, Board_to_Android, t_Lose, 0x00, 0x00);   //输
     }
+    CommTransmitFillData(&Tx1, Board_to_Android, t_Switch, id, 0x00); //微动编号
 }
+
 void KeyAll_Init(void)
 {
     Switch_Init();
